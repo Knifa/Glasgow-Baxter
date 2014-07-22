@@ -1,0 +1,84 @@
+#!/usr/bin/env python
+
+import numpy as np
+
+import cv2
+from cv_bridge import CvBridge
+
+import rospy
+from image_geometry import PinholeCameraModel
+from sensor_msgs.msg import Image, CameraInfo
+
+from baxter_interface import CameraController
+
+################################################################################
+
+class RecitfyCamera(object):
+    def __init__(self):
+        camera_name = '{0}_camera'.format(rospy.get_param('~camera'))
+        resolution = rospy.get_param('~resolution', 0)
+        exposure = rospy.get_param('~exposure', CameraController.CONTROL_AUTO)
+        gain = rospy.get_param('~gain', CameraController.CONTROL_AUTO)
+
+        self._camera = CameraController(camera_name)
+        self._camera.close()
+        self._camera.resolution = CameraController.MODES[resolution]
+        self._camera.exposure = int(exposure * 100.0)
+        self._camera.gain = int(gain * 79.0)
+        self._camera.fps = 30
+        self._camera.open()
+
+        self._cvbr = CvBridge()
+        self._model = PinholeCameraModel()
+        self._model_configured = False
+
+        self._info_sub = rospy.Subscriber(
+            '/cameras/{0}/camera_info'.format(camera_name), 
+            CameraInfo, 
+            self.on_info_received)
+        self._image_sub = rospy.Subscriber(
+            '/cameras/{0}/image'.format(camera_name), 
+            Image,
+            self.on_image_received)
+        self._image_rect_pub = rospy.Publisher(
+            '/cameras/{0}/image_rect'.format(camera_name), 
+            Image,
+            tcp_nodelay=True)
+
+    def start(self):
+        rospy.spin()
+
+    def on_info_received(self, info):
+        self._model.fromCameraInfo(info)
+        self._model_configured = True
+
+        self._info_sub.unregister()
+        self._info_sub = None
+
+    def on_image_received(self, img_msg):
+        if not self._model_configured:
+            return
+
+        img = self._cvbr.imgmsg_to_cv(img_msg, 'bgr8')
+        rect_img = self._rectify_image(img)
+
+        rect_img_msg = self._cvbr.cv_to_imgmsg(rect_img, 'bgr8')
+        self._image_rect_pub.publish(rect_img_msg)
+
+    def _rectify_image(self, img):
+        rect_img = cv2.cv.CreateMat(img.rows, img.cols, cv2.CV_8UC3)
+        self._model.rectifyImage(img, rect_img)
+
+        return rect_img
+
+################################################################################
+
+def main():
+    rospy.init_node('rectify_camera', anonymous=True)
+    node = RecitfyCamera()
+    node.start()
+
+################################################################################
+
+if __name__ == '__main__':
+    main()

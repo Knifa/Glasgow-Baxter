@@ -1,0 +1,63 @@
+#!/usr/bin/env python
+
+import numpy as np
+
+import cv2
+from cv_bridge import CvBridge
+
+import rospy
+from sensor_msgs.msg import Image
+
+################################################################################
+
+class AverageCamera(object):
+    def __init__(self):
+        self._cvbr = CvBridge()
+
+        self._avg_target = rospy.get_param('~frames_to_average', 5)
+        self._avg_count = 0
+        self._avg_acc = None
+
+        self._image_sub = rospy.Subscriber(
+            '~image', 
+            Image,
+            self.on_image_received)
+        self._image_avg_pub = rospy.Publisher(
+            '~image_avg', 
+            Image,
+            tcp_nodelay=True)
+
+    def start(self):
+        rospy.spin()
+
+    def on_image_received(self, img_msg):
+        img = self._cvbr.imgmsg_to_cv2(img_msg, 'bgr8')
+        
+        # Create an accumulator array the same size as the input images.
+        if self._avg_acc is None:
+            self._avg_acc = np.zeros(img.shape, dtype='float64')
+
+        cv2.accumulate(np.float64(img) / 255, self._avg_acc)
+        self._avg_count += 1
+
+        # Publish the average image once we hit our target count.
+        if self._avg_count >= self._avg_target:
+            avg_img = np.uint8(self._avg_acc / self._avg_target * 255)
+            avg_img_msg = self._cvbr.cv2_to_imgmsg(avg_img, 'bgr8')
+            self._image_avg_pub.publish(avg_img_msg)
+
+            # Reset the average count and accumulator.
+            self._avg_count = 0
+            self._avg_acc[:, :, :] = 0        
+
+################################################################################
+
+def main():
+    rospy.init_node('average_camera', anonymous=True)
+    node = AverageCamera()
+    node.start()
+
+################################################################################
+
+if __name__ == '__main__':
+    main()
