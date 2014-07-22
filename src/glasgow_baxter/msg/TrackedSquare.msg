@@ -1,0 +1,5 @@
+DetectedSquare detected_square
+
+bool tracking_detected
+uint64 tracking_id
+uint16[3] tracking_colour

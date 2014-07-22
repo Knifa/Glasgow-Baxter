@@ -1,0 +1,27 @@
+<launch>
+    <machine name="rgbd-slave" 
+             address="cubagua"
+             user="daniel"
+             password="krexkat1992"
+             env-loader="/home/daniel/baxter_ws/remote.sh" />
+
+    <node machine="rgbd-slave"
+          name="tracker"
+          pkg="openni2_tracker"
+          type="tracker"
+          output="screen">
+
+        <param name="tf_prefix" value="skeleton" />
+        <param name="relative_frame" value="/skeleton_depth_frame" />
+    </node>
+    <node machine="rgbd-slave"
+          name="world_to_tracker"
+          pkg="tf" 
+          type="static_transform_publisher"  
+          args="0 0 0 1.5707 0 1.5707 /base /skeleton_depth_frame 100" />
+
+    <node name="mimic"
+          pkg="glasgow_baxter"
+          type="mimic.py"
+          output="screen" />
+</launch>

@@ -1,0 +1,45 @@
+<launch>
+    <node name="$(anon rectify_image)"
+          pkg="glasgow_baxter_helpers"
+          type="rectify_camera"
+          output="screen">
+
+        <param name="camera" value="right_hand" />
+        <param name="exposure" value="0.8" />
+        <param name="gain" value ="0.33" />
+    </node>
+
+    <!-- <node name="$(anon avg_image)"
+          pkg="glasgow_baxter"
+          type="avg_camera.py"
+          output="screen">
+
+        <param name="frames_to_average" value="5" />
+          
+        <remap from="image" to="/cameras/right_hand_camera/image_rect" />
+        <remap from="image_avg" to="/cameras/right_hand_camera/image_rect_avg" />
+    </node> -->
+
+    <node name="perception"
+          pkg="glasgow_baxter"
+          type="perception.py"
+          output="screen" />
+
+    <node name="understanding"
+          pkg="glasgow_baxter"
+          type="understanding.py"
+          output="screen" />
+
+    <node name="visualisation"
+          pkg="glasgow_baxter"
+          type="visualisation.py"
+          output="screen" />
+
+    <!-- <node name="block_stacker"
+          pkg="glasgow_baxter"
+          type="block_stacker.py"
+          output="screen">
+
+        <rosparam command="load" file="$(find glasgow_baxter)/cfg/block_stacker.yaml" />
+    </node> -->
+</launch>
