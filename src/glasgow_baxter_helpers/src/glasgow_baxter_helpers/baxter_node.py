@@ -14,9 +14,32 @@ from baxter_interface import (
 
 from baxter_ikhelper import IKHelper
 
-####################################################################################################
+################################################################################
 
 class BaxterNode(object):
+    """Helper class for creating Baxter nodes quickly, intended to be 
+    sublclassed.
+
+    Attributes:
+        rs -- An instance of RobotEnable provided by baxter_interface.
+        ik -- An instance of IKHelper.
+
+        left_img -- Last recieved image from left camera, rectified and as an 
+            OpenCV numpy array.
+        right_img -- Last recieved image from right camera, rectified and as an 
+            OpenCV numpy array.
+
+        left_itb -- Last received state from left ITB (shoulder buttons).
+        left_itb -- Last received state from right ITB (shoulder buttons).
+
+        left_gripper -- Instance of Gripper from baxter_interface, for left
+            hand.
+        right_gripper -- Instance of Gripper from baxter_interface, for right
+            hand.
+    """
+
+    ############################################################################
+
     def __init__(self, camera_averaging=False):
         self._cvbr = CvBridge()
 
@@ -63,6 +86,12 @@ class BaxterNode(object):
     ############################################################################
 
     def start(self, spin=False, calibrate=False):
+        """Start up the node and initalise Baxter.
+
+        Keyword arguments:
+            spin -- Enter a spin loop once initialised (default False).
+            calibrate -- Calibrate the grippers (default False).
+        """
         self.rs.enable()
 
         # Wait for initial topic messages to come in.
@@ -81,6 +110,11 @@ class BaxterNode(object):
             rospy.spin()
 
     def display_image(self, img):
+        """Displays an image on the screen.
+
+        Arguments:
+            img -- A OpenCV numpy array to be displayed.
+        """
         img = cv2.resize(img, (1024, 600))
 
         if len(img.shape) == 2:
@@ -92,15 +126,39 @@ class BaxterNode(object):
     ############################################################################
 
     def on_left_image_received(self, img):
+        """Called when a image is received from the left camera. Intended to be
+        overridden.
+
+        Arguments:
+            img -- The rectified OpenCV numpy array from the camera.
+        """
         pass
 
     def on_right_image_received(self, img):
+        """Called when a image is received from the right camera. Intended to be
+        overridden.
+
+        Arguments:
+            img -- The rectified OpenCV numpy array from the camera.
+        """
         pass
 
     def on_left_itb_received(self, itb):
+        """Called when a left ITB state update is received. Intended to be
+        overridden.
+
+        Arguments:
+            itb -- The new ITB state.
+        """
         pass
 
     def on_right_itb_received(self, itb):
+        """Called when a right ITB state update is received. Intended to be
+        overridden.
+
+        Arguments:
+            itb -- The new ITB state.
+        """
         pass
 
     ############################################################################
@@ -128,4 +186,3 @@ class BaxterNode(object):
     def _on_right_itbmsg_received(self, itb_msg):
         self.right_itb = itb_msg
         self.on_right_itb_received(self.right_itb)
-    
