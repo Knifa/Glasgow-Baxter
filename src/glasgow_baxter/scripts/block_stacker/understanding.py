@@ -5,7 +5,9 @@ from glasgow_baxter_helpers import BaxterNode
 from gla_baxter.msg import DetectedSquares, TrackedSquares
 from square import Square, TrackedSquare
 
+import numpy as np
 from scipy.spatial import distance
+from sklearn.cluster import MeanShift, AffinityPropagation, DBSCAN, estimate_bandwidth
 
 import random
 import itertools
@@ -27,7 +29,7 @@ class UnderstandingNode(BaxterNode):
             TrackedSquares,
             tcp_nodelay=True)
 
-        self._tracked_squares = None
+        self._prev_squares = collections.deque(maxlen=5)
 
     ############################################################################
 
@@ -41,7 +43,29 @@ class UnderstandingNode(BaxterNode):
         for square_msg in msg.squares:
             detected_squares.append(TrackedSquare.from_msg(square_msg))
 
-        self._track_squares(detected_squares)
+        self._prev_squares.append(detected_squares)
+        
+        all_squares = list(itertools.chain.from_iterable(self._prev_squares))
+        square_centers = [list(s.center) for s in all_squares]
+        data = np.array(square_centers)
+
+        ms = DBSCAN(eps=128)
+        ms.fit(data)
+        labels = ms.labels_
+
+        ts_msg = TrackedSquares()
+        for i, s in enumerate(all_squares):
+            label = np.int0(labels[i])
+            if label < 0: 
+                continue
+
+            s.tracking_colour = TrackedSquare.TRACKING_COLOURS[label % len(TrackedSquare.TRACKING_COLOURS)]
+            s.tracking_detected = True
+
+            ts_msg.squares.append(s.to_msg())
+
+        self._squares_pub.publish(ts_msg)
+
 
     ############################################################################
 
@@ -61,6 +85,7 @@ class UnderstandingNode(BaxterNode):
             ds.tracking_colour = ts.tracking_colour
 
         # Mark any untracked squares this frame as inactive.
+        ts_msg = TrackedSquares()
         for ts in self._tracked_squares.values():
             if not ts in min_squares.keys():
                 ts.tracking_detected = False

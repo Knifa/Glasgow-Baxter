@@ -44,8 +44,8 @@ class VisualisationNode(BaxterNode):
     def _draw_squares(self, squares, img):
         for s in self._squares:
             tracking_colour = s.tracking_colour
-            if not s.tracking_detected:
-                tracking_colour = (100, 100, 100)
+            #if not s.tracking_detected:
+            #    tracking_colour = (100, 100, 100)
 
             cv2.drawContours(img, np.int0([s.box]), -1, tracking_colour, 3)
             cv2.circle(img, tuple(np.int0(s.center)), 4, tracking_colour, -1)
