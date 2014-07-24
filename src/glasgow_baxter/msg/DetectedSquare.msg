@@ -1,2 +1,3 @@
 geometry_msgs/Polygon screen_contour
 geometry_msgs/Pose2D screen_pose
+float32 hue

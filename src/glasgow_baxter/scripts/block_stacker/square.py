@@ -39,12 +39,13 @@ class Square(object):
         for p in msg.screen_contour.points:
             contour.append([[p.x, p.y]])
 
-        return Square(np.array(contour, dtype=np.int0))
+        return Square(np.array(contour, dtype=np.int0), msg.hue)
 
     def to_msg(self):
         s_msg = DetectedSquare()
         s_msg.screen_pose.x = self.center[0]
         s_msg.screen_pose.y = self.center[1]
+        s_msg.hue = self.hue
 
         for p in self.contour:
             s_msg.screen_contour.points.append(Point32(x=p[0], y=p[1], z=0))
