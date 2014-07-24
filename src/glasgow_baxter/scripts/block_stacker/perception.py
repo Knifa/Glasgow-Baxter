@@ -71,7 +71,7 @@ class PerceptionNode(BaxterNode):
             img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
             img_hsv_channels = cv2.split(img_hsv)
 
-            s.hue = np.mean(img_hsv_channels[0][mask == 255])
+            s.hue = np.median(img_hsv_channels[0][mask == 255])
 
         return squares
 
