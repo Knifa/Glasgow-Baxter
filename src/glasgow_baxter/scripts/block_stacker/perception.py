@@ -17,8 +17,8 @@ from square import Square
 ####################################################################################################
 
 class PerceptionNode(BaxterNode):
-    SHAPE_STD_LIMIT = 5.0
-    SHAPE_AREA_PERCENT_LIMIT = 0.25
+    SHAPE_STD_LIMIT = 4.0
+    SHAPE_AREA_PERCENT_LIMIT = 0.2
     SHAPE_MIN_DISTANCE = 8
     SHAPE_ARC = 0.025
     RES_PERCENT = 0.75
