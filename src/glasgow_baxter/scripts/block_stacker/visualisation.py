@@ -45,11 +45,12 @@ class VisualisationNode(BaxterNode):
 
     def _draw_squares(self, squares, img):
         for s in self._squares:
-            colour = hls_to_rgb(s.hue / 180.0, 1.0, 0.5)
-            colour = tuple([x * 255 for x in colour])
+            colour_hls = hls_to_rgb(s.hue / 180.0, 0.5, 1.0)
+            colour_rgb = [x * 255 for x in colour_hls]
+            colour_bgr = (colour_rgb[2], colour_rgb[1], colour_rgb[0])
 
-            cv2.drawContours(img, np.int0([s.box]), -1, colour, 3)
-            cv2.circle(img, tuple(np.int0(s.center)), 4, colour, -1)
+            cv2.drawContours(img, np.int0([s.box]), -1, colour_bgr, 3)
+            cv2.circle(img, tuple(np.int0(s.center)), 4, colour_bgr, -1)
 
         return img
 
