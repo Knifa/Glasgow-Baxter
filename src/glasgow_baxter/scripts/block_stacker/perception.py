@@ -17,11 +17,11 @@ from square import Square
 ####################################################################################################
 
 class PerceptionNode(BaxterNode):
-    SHAPE_STD_LIMIT = 4.0
+    SHAPE_STD_LIMIT = 3.0
     SHAPE_AREA_PERCENT_LIMIT = 0.2
-    SHAPE_MIN_DISTANCE = 8
+    SHAPE_MIN_DISTANCE = 32
     SHAPE_ARC = 0.025
-    RES_PERCENT = 0.75
+    RES_PERCENT = 1.0
     CANNY_DILATE = 3
 
     ############################################################################
@@ -48,7 +48,7 @@ class PerceptionNode(BaxterNode):
     def on_right_image_received(self, img):
         img = cv2.resize(img, 
             (int(img.shape[1] * self.RES_PERCENT), int(img.shape[0] * self.RES_PERCENT)))
-        img = cv2.bilateralFilter(img, 5, 15, 15)
+        #img = cv2.bilateralFilter(img, 5, 15, 15)
 
         squares = self._find_squares(img)
         self._publish_squares(squares)
@@ -58,9 +58,22 @@ class PerceptionNode(BaxterNode):
     def _find_squares(self, img):
         contours = self._find_contours(img)
         squares = self._find_squares_from_contours(contours)
-        filtered_squares = self._filter_squares(squares)
+        squares = self._filter_squares(squares)
+        squares = self._find_square_hue(squares, img)
 
-        return filtered_squares
+        return squares
+
+    def _find_square_hue(self, squares, img):
+        for s in squares:
+            mask = np.zeros((img.shape[0], img.shape[1]), dtype=np.uint8)
+            cv2.fillConvexPoly(mask, s.box, (255))
+
+            img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+            img_hsv_channels = cv2.split(img_hsv)
+
+            s.hue = np.median(img_hsv_channels[0][mask == 255])
+
+        return squares
 
     def _find_squares_from_contours(self, contours):
         squares = []
