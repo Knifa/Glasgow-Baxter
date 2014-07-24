@@ -29,7 +29,7 @@ class UnderstandingNode(BaxterNode):
             TrackedSquares,
             tcp_nodelay=True)
 
-        self._prev_squares = collections.deque(maxlen=5)
+        self._prev_squares = collections.deque(maxlen=20)
 
     ############################################################################
 
@@ -46,7 +46,7 @@ class UnderstandingNode(BaxterNode):
         self._prev_squares.append(detected_squares)
         
         all_squares = list(itertools.chain.from_iterable(self._prev_squares))
-        square_centers = [list(s.center) for s in all_squares]
+        square_centers = [list(s.center) + [s.hue] for s in all_squares]
         data = np.array(square_centers)
 
         ms = DBSCAN(eps=128)
