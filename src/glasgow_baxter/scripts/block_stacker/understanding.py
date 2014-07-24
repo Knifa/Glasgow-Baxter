@@ -49,7 +49,7 @@ class UnderstandingNode(BaxterNode):
         square_centers = [list(s.center) + [s.hue] for s in all_squares]
         data = np.array(square_centers)
 
-        ms = DBSCAN(eps=128)
+        ms = DBSCAN(eps=64, min_samples=3)
         ms.fit(data)
         labels = ms.labels_
 
