@@ -5,8 +5,10 @@ import cv2
 
 import rospy
 from glasgow_baxter_helpers import BaxterNode
-from gla_baxter.msg import DetectedSquares, TrackedSquares
+from glasgow_baxter.msg import DetectedSquares, TrackedSquares
 from square import Square, TrackedSquare
+
+from colorsys import hls_to_rgb
 
 ####################################################################################################
 
@@ -43,12 +45,11 @@ class VisualisationNode(BaxterNode):
 
     def _draw_squares(self, squares, img):
         for s in self._squares:
-            tracking_colour = s.tracking_colour
-            #if not s.tracking_detected:
-            #    tracking_colour = (100, 100, 100)
+            colour = hls_to_rgb(s.hue / 180.0, 1.0, 0.5)
+            colour = tuple([x * 255 for x in colour])
 
-            cv2.drawContours(img, np.int0([s.box]), -1, tracking_colour, 3)
-            cv2.circle(img, tuple(np.int0(s.center)), 4, tracking_colour, -1)
+            cv2.drawContours(img, np.int0([s.box]), -1, colour, 3)
+            cv2.circle(img, tuple(np.int0(s.center)), 4, colour, -1)
 
         return img
 

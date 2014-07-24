@@ -2,7 +2,7 @@
 
 import rospy
 from glasgow_baxter_helpers import BaxterNode
-from gla_baxter.msg import DetectedSquares, TrackedSquares
+from glasgow_baxter.msg import DetectedSquares, TrackedSquares
 from square import Square, TrackedSquare
 
 import numpy as np

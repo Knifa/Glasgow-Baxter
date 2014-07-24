@@ -9,7 +9,7 @@ from geometry_msgs.msg import (
     Point32
 )
 
-from gla_baxter.msg import (
+from glasgow_baxter.msg import (
     DetectedSquare, 
     TrackedSquare as TrackedSquareMsg
 )
@@ -62,6 +62,7 @@ class TrackedSquare(Square):
         self.box = detected_square.box
         self.moments = detected_square.moments
         self.center = detected_square.center
+        self.hue = detected_square.hue
 
         self.tracking_detected = False
         self.tracking_colour = random.choice(self.TRACKING_COLOURS)

@@ -9,7 +9,7 @@ from scipy.spatial.distance import euclidean
 
 import rospy
 from geometry_msgs.msg import Polygon, Pose2D, Point32
-from gla_baxter.msg import DetectedSquare, DetectedSquares
+from glasgow_baxter.msg import DetectedSquare, DetectedSquares
 
 from glasgow_baxter_helpers import BaxterNode
 from square import Square
