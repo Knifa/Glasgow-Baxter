@@ -106,11 +106,8 @@ class BaxterNode(object):
         self.rs.enable()
 
         # Wait for initial topic messages to come in.
-        while self.left_img is None or \
-              self.right_img is None or \
-              self.head_img is None or \
-              self.left_itb is None or \
-              self.right_itb is None:
+        while self.left_itb is None or \
+                self.right_itb is None:
             rospy.sleep(100)
 
         # Calibrate both grippers.
