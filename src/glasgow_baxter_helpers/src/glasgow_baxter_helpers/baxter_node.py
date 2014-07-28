@@ -9,7 +9,8 @@ from baxter_interface import (
     RobotEnable,
     AnalogIO, 
     DigitalIO,
-    Gripper
+    Gripper,
+    Head
 )
 
 from baxter_ikhelper import IKHelper
@@ -40,27 +41,35 @@ class BaxterNode(object):
 
     ############################################################################
 
-    def __init__(self, camera_averaging=False):
+    def __init__(
+            self, 
+            camera_averaging=False):
         self._cvbr = CvBridge()
 
         self.rs = RobotEnable()
         self.ik = IKHelper()
 
-        camera_topic = '/cameras/{0}_hand_camera/image_rect'
+        camera_topic = '/cameras/{0}_camera/image_rect'
         if camera_averaging:
             camera_topic += '_avg'
 
         self.left_img = None
         self._left_camera_sub = rospy.Subscriber(
-            camera_topic.format('left'), 
+            camera_topic.format('left_hand'), 
             Image,
             self._on_left_imagemsg_received)
 
         self.right_img = None
         self._right_camera_sub = rospy.Subscriber(
-            camera_topic.format('right'), 
+            camera_topic.format('right_hand'), 
             Image,
             self._on_right_imagemsg_received)
+
+        self.head_img = None
+        self._head_camera_sub = rospy.Subscriber(
+            camera_topic.format('head'), 
+            Image,
+            self._on_head_imagemsg_received)
 
         self.left_itb = None
         self._left_itb_sub = rospy.Subscriber(
@@ -76,6 +85,8 @@ class BaxterNode(object):
 
         self.left_gripper = Gripper('left')
         self.right_gripper = Gripper('right')
+
+        self.head = Head()
 
         self._display_pub = rospy.Publisher(
             '/robot/xdisplay', 
@@ -97,6 +108,7 @@ class BaxterNode(object):
         # Wait for initial topic messages to come in.
         while self.left_img is None or \
               self.right_img is None or \
+              self.head_img is None or \
               self.left_itb is None or \
               self.right_itb is None:
             rospy.sleep(100)
@@ -143,6 +155,15 @@ class BaxterNode(object):
         """
         pass
 
+    def on_head_image_received(self, img):
+        """Called when a image is received from the head camera. Intended to be
+        overridden.
+
+        Arguments:
+            img -- The rectified OpenCV numpy array from the camera.
+        """
+        pass
+
     def on_left_itb_received(self, itb):
         """Called when a left ITB state update is received. Intended to be
         overridden.
@@ -178,6 +199,13 @@ class BaxterNode(object):
     def _on_right_imagemsg_received(self, img_msg):
         self.right_img = self._camera_imgmsg_to_cv2(img_msg)
         self.on_right_image_received(self.right_img)
+
+    def _on_head_imagemsg_received(self, img_msg):
+        img = self._camera_imgmsg_to_cv2(img_msg)
+        img = cv2.flip(img, 0)
+
+        self.head_img = img
+        self.on_head_image_received(self.head_img)
 
     def _on_left_itbmsg_received(self, itb_msg):
         self.left_itb = itb_msg
