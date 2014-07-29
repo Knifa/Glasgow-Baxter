@@ -1,0 +1,31 @@
+<launch>
+    <node name="$(anon camera_controller)"
+          pkg="baxter_tools"
+          type="camera_control.py"
+          args="-c left_hand_camera" />
+
+    <node name="$(anon camera_controller)"
+          pkg="baxter_tools"
+          type="camera_control.py"
+          args="-c right_hand_camera" />
+
+    <node name="$(anon camera_controller)"
+          pkg="baxter_tools"
+          type="camera_control.py"
+          args="-c head_camera" />
+
+    <node name="$(anon rectify_image)"
+          pkg="glasgow_baxter_helpers"
+          type="rectify_camera"
+          output="screen">
+
+        <param name="camera" value="head" />
+        <param name="exposure" value="0.75" />
+        <param name="gain" value ="0.25" />
+    </node>
+
+    <node name="$(anon test_head_camera)"
+          pkg="glasgow_baxter"
+          type="test_head_camera.py"
+          output="screen" />
+</launch>
