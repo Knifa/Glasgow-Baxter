@@ -19,7 +19,7 @@ class FaceTrackerNode(BaxterNode):
 
     RATE = 5
 
-    TURN_THRESHOLD = 16
+    TURN_THRESHOLD = 32
     TURN_SPEED = (1.0 / RATE) * (np.pi / 4.0)
 
     ############################################################################
@@ -67,15 +67,13 @@ class FaceTrackerNode(BaxterNode):
 
         if len(centers) > 0:
             min_center = min(centers, key=lambda x: distance.euclidean(x, [0,0]))
-            move_scale = np.clip(distance.euclidean(min_center, [0,0]) / (self.TURN_THRESHOLD*4), 0.05, 1.0)
+            move_scale = np.clip(distance.euclidean(min_center, [0,0]) / (self.TURN_THRESHOLD*8), 0.02, 1.0)
 
             new_angle = self.head.pan()
             if min_center[0] <= -(self.TURN_THRESHOLD / 2):
                 new_angle -= self.TURN_SPEED * move_scale
-                print 'turn left'
             elif min_center[0] >= (self.TURN_THRESHOLD / 2):
                 new_angle += self.TURN_SPEED * move_scale
-                print 'turn right'
 
             self.head.set_pan(new_angle, timeout=0.0)
 
