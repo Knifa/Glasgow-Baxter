@@ -29,10 +29,7 @@ class FaceTrackerNode(BaxterNode):
 
         self._cc = cv2.CascadeClassifier(
             os.path.join(self.CLASSIFIER_DIR, self.CLASSIFIER_FILE))
-
-        print self.TURN_SPEED
-        print self.TURN_THRESHOLD
-
+        
     ############################################################################
 
     def start(self):
@@ -67,7 +64,7 @@ class FaceTrackerNode(BaxterNode):
 
         if len(centers) > 0:
             min_center = min(centers, key=lambda x: distance.euclidean(x, [0,0]))
-            move_scale = np.clip(distance.euclidean(min_center, [0,0]) / (self.TURN_THRESHOLD*8), 0.02, 1.0)
+            move_scale = np.clip(distance.euclidean(min_center, [0,0]) / (self.TURN_THRESHOLD*4), 0.02, 1.0)
 
             new_angle = self.head.pan()
             if min_center[0] <= -(self.TURN_THRESHOLD / 2):
