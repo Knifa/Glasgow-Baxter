@@ -26,6 +26,6 @@
 
     <node name="$(anon test_head_camera)"
           pkg="glasgow_baxter"
-          type="test_head_camera.py"
+          type="face_tracker.py"
           output="screen" />
 </launch>
