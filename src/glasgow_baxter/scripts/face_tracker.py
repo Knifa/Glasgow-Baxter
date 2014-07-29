@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
+import rospkg
 from glasgow_baxter_helpers import BaxterNode
 
 import numpy as np
@@ -18,9 +19,12 @@ class FaceTrackerNode(BaxterNode):
     SCALE = 0.5
 
     RATE = 5
-
-    TURN_THRESHOLD = 32
+    TURN_THRESHOLD = 100
     TURN_SPEED = (1.0 / RATE) * (np.pi / 4.0)
+
+    FACE_LEFT = 'share/face_left.png'
+    FACE_RIGHT = 'share/face_right.png'
+    FACE_CENTER = 'share/face_center.png'
 
     ############################################################################
 
@@ -29,6 +33,17 @@ class FaceTrackerNode(BaxterNode):
 
         self._cc = cv2.CascadeClassifier(
             os.path.join(self.CLASSIFIER_DIR, self.CLASSIFIER_FILE))
+
+        rp = rospkg.RosPack()
+        pkg_path = rp.get_path('glasgow_baxter')
+        
+        self._face_left_img = cv2.imread(os.path.join(pkg_path, self.FACE_LEFT))
+        self._face_right_img = cv2.imread(
+            os.path.join(pkg_path, self.FACE_RIGHT))
+        self._face_center_img = cv2.imread(
+            os.path.join(pkg_path, self.FACE_CENTER))
+
+        self._face_img = self._face_center_img
         
     ############################################################################
 
@@ -46,8 +61,10 @@ class FaceTrackerNode(BaxterNode):
             centers = self._pan_head_to_nearest_face(rects, self.head_img.shape)
 
             img = self._draw_faces(self.head_img, rects, centers)
+            img = cv2.resize(img, (1024, 600))
 
-            self.display_image(img)
+            blend_img = cv2.addWeighted(self._face_img, 0.66, img, 0.33, 0)
+            self.display_image(blend_img)
             r.sleep()
 
     ############################################################################
@@ -64,13 +81,17 @@ class FaceTrackerNode(BaxterNode):
 
         if len(centers) > 0:
             min_center = min(centers, key=lambda x: distance.euclidean(x, [0,0]))
-            move_scale = np.clip(distance.euclidean(min_center, [0,0]) / (self.TURN_THRESHOLD*4), 0.02, 1.0)
+            move_scale = np.clip(distance.euclidean(min_center, [0,0]) / (self.TURN_THRESHOLD), 0.2, 1.0)
 
             new_angle = self.head.pan()
             if min_center[0] <= -(self.TURN_THRESHOLD / 2):
                 new_angle -= self.TURN_SPEED * move_scale
+                self._face_img = self._face_left_img
             elif min_center[0] >= (self.TURN_THRESHOLD / 2):
                 new_angle += self.TURN_SPEED * move_scale
+                self._face_img = self._face_right_img
+            else:
+                self._face_img = self._face_center_img
 
             self.head.set_pan(new_angle, timeout=0.0)
 
